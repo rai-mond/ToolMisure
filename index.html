@@ -186,7 +186,7 @@
 				scene = new THREE.Scene();
 				scene.background = null;
 
-        camera = new THREE.PerspectiveCamera( 100, canvas.width / canvas.height, 0.1, 1000000 );
+        camera = new THREE.PerspectiveCamera( 120, canvas.width / canvas.height, 0.1, 1000000 );
 
         scene.add(camera);
 
@@ -329,7 +329,7 @@
 						a=addSplineObject( poss[ i ],rot );
 						if(i==0){
 
-							camera.position.set( -220, 40, poss[ i ].z*2 );
+							camera.position.set( -260, 40, poss[ i ].z );
 							//a.name="1";
 							a.add( helper );
 						}
