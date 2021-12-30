@@ -31,7 +31,7 @@
 
 			let camera, scene, renderer, controlsD, layer,ob,controls;
 
-			var video,a, canvas, context, imageData, detector, posit,model,texture;
+			var video,a, pose,poss,canvas, context, imageData, detector, posit,model,texture;
 
 			var modelSize = 35.0; //millimeters
 
@@ -45,7 +45,7 @@
 			const onUpPosition = new THREE.Vector2();
 			const onDownPosition = new THREE.Vector2();
 
-			const geometri = new THREE.SphereGeometry( 40, 32, 16 );
+			const geometri = new THREE.SphereGeometry( 50, 32, 16 );
 
     	let transformControl;
 
@@ -65,7 +65,7 @@
 			const radials = 16;
 			const circles = 25;
 			const divisions = 32;
-			const helper = new THREE.PolarGridHelper( 100, 32,4,72,0x664466 );
+			const helper = new THREE.PolarGridHelper( 200, 32,4,72,0x664466 );
 
 			const startButton = document.getElementById( 'startButton' );
 			startButton.addEventListener( 'click', function () {
@@ -144,6 +144,7 @@
 
     		requestAnimationFrame(animate);
 			}
+//   ---------   HANDLE   MOTION  -------------- //
 /*
 			function handleMotion(event) {
 
@@ -151,6 +152,9 @@
 
 			}
 */
+
+//-------------------------------------------------
+
 			function createRenderers(){
 
 				const contain = document.createElement( "div" );
@@ -186,12 +190,12 @@
 				scene = new THREE.Scene();
 				scene.background = null;
 
-        camera = new THREE.PerspectiveCamera( 120, canvas.width / canvas.height, 0.1, 1000000 );
+        camera = new THREE.PerspectiveCamera(150, canvas.width / canvas.height, 0.1, 1000000 );
 
         scene.add(camera);
 
         transformControl = new TransformControls( camera, renderer.domElement );
-        transformControl.size = 1.2;
+        transformControl.size = 1.5;
 				transformControl.showY=false;
 				transformControl.setMode( "translate" );
 				transformControl.setSpace("local");
@@ -201,11 +205,7 @@
         transformControl.addEventListener( 'dragging-changed', function ( event ) {
             console.log(event.value);
         		//controls.enabled = ! event.value;
-
         } );
-
-
-                //
 
         transformControl.addEventListener( 'objectChange', function () {
 
@@ -252,12 +252,12 @@
 
 				controlsD = new DeviceOrientationControls( camera );
 
+				model = createModel();
+	      scene.add(model);
+
         document.addEventListener( 'pointerdown', onPointerDown );
 				document.addEventListener( 'pointerup', onPointerUp );
 				document.addEventListener( 'pointermove', onPointerMove );
-
-
-
 
     	};
 
@@ -275,16 +275,25 @@
 	      return object;
 	    };
 
+			function createModel(){
+        var object = new THREE.Object3D(),
+        geometry = new THREE.SphereGeometry(0.5, 15,15, Math.PI),
+      	//camera1ctexture = THREE.ImageUtils.loadTexture("textures/earth.jpg"),
+        material = new THREE.MeshBasicMaterial( ),
+        mesh = new THREE.Mesh(geometry, material);
+
+      	object.add(mesh);
+
+		    return object;
+    	};
+
 			function animate() {
 				window.requestAnimationFrame( animate );
 				if (video.readyState === video.HAVE_ENOUGH_DATA){
 
 	        	snapshot();
-
 	          var markers = detector.detect(imageData);
 	          updateScenes(markers);
-
-
 
 	    	}
 				controlsD.update();
@@ -299,7 +308,7 @@
 
 			function updateScenes(markers){
 
-					var corners, corner, pose, i;
+					var corners, corner,  i;
 
 					if (markers.length > 0){
 
@@ -312,13 +321,14 @@
 						}
 
 						pose = posit.pose(corners);
-						var poss=[new THREE.Vector3(pose.bestTranslation[0]-50,pose.bestTranslation[1]-80,pose.bestTranslation[2]),new THREE.Vector3(pose.bestTranslation[0]+150,pose.bestTranslation[1],pose.bestTranslation[2])]
+						poss=[new THREE.Vector3(pose.bestTranslation[0],pose.bestTranslation[1],pose.bestTranslation[2])]
 						if(trig==0){
+							/*
 							create_mods(poss,pose.bestRotation);
-
 						};
 						if(trig==2){
-							updateObject(a, pose.bestRotation, pose.bestTranslation);
+							*/
+							updateObject(model, pose.bestRotation, pose.bestTranslation);
 						}
 					}
 			};
@@ -326,10 +336,10 @@
 			function create_mods(poss,rot){
 
 				for ( let i = 0; i < splinePointsLength; i ++ ) {
-						a=addSplineObject( [poss[ i ].x-50,poss[ i ].y-50,poss[ i ].z ],rot );
+						a=addSplineObject( poss[ i ],rot );
 						if(i==0){
 
-							camera.position.set( -380, 180, poss[ i ].z );
+							camera.position.set( -360, 40, poss[ i ].z );
 							//a.name="1";
 							a.add( helper );
 						}
@@ -355,7 +365,7 @@
 					const spline = splines[ k ];
 					scene.add( spline.mesh );
 				}
-				trig=2;
+				trig=1;
 			}
 
 			function addSplineObject( position,rotation ) {
@@ -397,16 +407,13 @@
 			};
 
     	function load( new_positions ) {
-
 				while ( new_positions.length > positions.length ) {
 					addPoint();
 
 				}
-
 				while ( new_positions.length < positions.length ) {
 					removePoint();
 				}
-
 				for ( let i = 0; i < positions.length; i ++ ) {
 	    		positions[ i ].copy( new_positions[ i ] );
 				}
@@ -414,7 +421,9 @@
 			}
 
       function addPoint() {
-
+						if(trig==0){
+							create_mods(poss,pose.bestRotation);
+						}
       			splinePointsLength ++;
       			positions.push( addSplineObject().position );
       			updateSplineOutline();
@@ -463,19 +472,9 @@
         }
 
       }
-/*
-    	function createModel(){
-        var object = new THREE.Object3D(),
-        geometry = new THREE.SphereGeometry(0.5, 15,15, Math.PI),
-      	texture = THREE.ImageUtils.loadTexture("textures/earth.jpg"),
-        material = new THREE.MeshBasicMaterial( {map: texture} ),
-        mesh = new THREE.Mesh(geometry, material);
 
-      	object.add(mesh);
 
-		    return object;
-    	};
-*/
+
     	function updateObject(object, rotation, translation){
     	    object.scale.x = modelSize;
         	object.scale.y = modelSize;
